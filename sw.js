@@ -1,4 +1,4 @@
-const CACHE='iseo-magic-v2';
+const CACHE='iseo-magic-v3';
 const FILES=['./','./index.html','./style.css','./app.js','./manifest.webmanifest','./icon.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()));

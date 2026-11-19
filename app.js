@@ -50,26 +50,42 @@ function speak(t,lang='ko'){
     synth.speak(u);
   }catch(e){ /* TTS unavailable in this iOS web-app context */ }
 }
-
-const englishSounds = {
-  A:'에이', B:'비', C:'씨', D:'디', E:'이',
-  F:'에프', G:'지', H:'에이치', I:'아이', J:'제이',
-  K:'케이', L:'엘', M:'엠', N:'엔', O:'오우',
-  P:'피', Q:'큐', R:'아르', S:'에스', T:'티',
-  U:'유', V:'브이', W:'더블유', X:'엑스',
-  Y:'와이', Z:'지'
-};
-
-function say(item, m=mode) {
-  if (m === 'e') {
-    sound(englishSounds[item[0]], 'ko');
-  } else {
-    sound(item[1], 'ko');
-  }
+const englishSounds={A:'에이',B:'비',C:'씨',D:'디',E:'이',F:'에프',G:'지',H:'에이치',I:'아이',J:'제이',K:'케이',L:'엘',M:'엠',N:'엔',O:'오우',P:'피',Q:'큐',R:'아르',S:'에스',T:'티',U:'유',V:'브이',W:'더블유',X:'엑스',Y:'와이',Z:'지'};
+function say(item,m=mode){sound(m==='e'?englishSounds[item[0]]:item[1],'ko')}
+// A short, original musical success cue. Runs on a real answer tap.
+function victorySound(){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(!C)return;
+    if(!audioContext)audioContext=new C();
+    if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+    const t=audioContext.currentTime;
+    [523.25,659.25,783.99,1046.5].forEach((f,i)=>{
+      const o=audioContext.createOscillator(),g=audioContext.createGain(),start=t+i*.105;
+      o.type='sine';o.frequency.setValueAtTime(f,start);
+      g.gain.setValueAtTime(.0001,start);
+      g.gain.exponentialRampToValueAtTime(.12,start+.025);
+      g.gain.exponentialRampToValueAtTime(.0001,start+.3);
+      o.connect(g).connect(audioContext.destination);o.start(start);o.stop(start+.31);
+    });
+  }catch(e){}
 }
-function home(){quiz=null;$('screen').innerHTML=`<section class="hero"><div class="mascot">🧚🏻‍♀️🐰✨</div><h1>이서의 마법 글자 놀이터</h1><p class="subtitle">요정 친구와 글자 마법을 배워요!</p></section><div class="menu"><button class="tile" data-go="c"><span class="emoji">🌸</span>ㄱ ㄴ ㄷ<br>자음 마법</button><button class="tile" data-go="v"><span class="emoji">🦄</span>ㅏ ㅑ ㅓ<br>모음 마법</button><button class="tile" data-go="e"><span class="emoji">🌈</span>A B C<br>ABC 마법</button><button class="tile" data-go="q"><span class="emoji">⭐</span>글자 찾기<br>별 모으기</button></div><div class="actions"><button class="btn mint" data-go="draw">✏️ 손가락 글자 쓰기</button></div><p class="small">🔊 소리 버튼을 누르면 마법 효과음이 나와요. 글자 읽기는 아이폰 음성 기능에 따라 들리지 않을 수 있어요.</p>`;document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>b.dataset.go==='q'?startQuiz():b.dataset.go==='draw'?draw():learn(b.dataset.go));}
+let celebrationTimer;
+function celebrate(){
+  document.getElementById('magic-celebration')?.remove();
+  clearTimeout(celebrationTimer);
+  const overlay=document.createElement('div');
+  overlay.id='magic-celebration';overlay.className='magic-celebration';
+  overlay.setAttribute('aria-label','정답! 마법 요정이 춤춰요!');
+  overlay.innerHTML=`<div class="magic-glow"></div><div class="magic-stars">${Array.from({length:18},(_,i)=>`<span style="--i:${i};--x:${Math.round(Math.cos(i*2.4)*155)}px;--y:${Math.round(Math.sin(i*2.4)*220)}px">${i%3===0?'💖':'✨'}</span>`).join('')}</div><div class="fairy-party"><span class="dancing-fairy">🧚🏻‍♀️</span><span class="magic-wand">🪄</span><span class="dancing-bunny">🐰</span></div><div class="magic-cheer">뾰로롱~! ✨<small>이서 최고! ⭐ +1</small></div>`;
+  overlay.addEventListener('click',()=>overlay.remove(),{once:true});
+  document.body.appendChild(overlay);
+  victorySound();
+  celebrationTimer=setTimeout(()=>overlay.remove(),2600);
+}
+function home(){quiz=null;$('screen').innerHTML=`<section class="hero"><div class="mascot">🧚🏻‍♀️🐰✨</div><h1>이서의 마법 글자 놀이터</h1><p class="subtitle">요정 친구와 글자 마법을 배워요!</p></section><div class="menu"><button class="tile" data-go="c"><span class="emoji">🌸</span>ㄱ ㄴ ㄷ<br>자음 마법</button><button class="tile" data-go="v"><span class="emoji">🦄</span>ㅏ ㅑ ㅓ<br>모음 마법</button><button class="tile" data-go="e"><span class="emoji">🌈</span>A B C<br>ABC 마법</button><button class="tile" data-go="q"><span class="emoji">⭐</span>글자 찾기<br>별 모으기</button></div><div class="actions"><button class="btn mint" data-go="draw">✏️ 손가락 글자 쓰기</button></div><p class="small">🔊 글자를 누르면 이름을 읽어요. 정답을 맞히면 요정들이 춤춰요!</p>`;document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>b.dataset.go==='q'?startQuiz():b.dataset.go==='draw'?draw():learn(b.dataset.go));}
 function learn(m,i=0){mode=m;idx=i;const {title,items}=sets[m],item=items[idx];$('screen').innerHTML=`<h2>✨ ${title} 마법 ✨</h2><div class="panel"><div class="mascot">🧚🏻‍♀️</div><div class="bigletter">${item[0]}</div><div class="word">${m==='e'?item[0]+' · '+item[0].toLowerCase():item[1]}</div><p class="hint">글자를 눌러 소리를 들어보세요!</p><button class="btn" id="play">🔊 소리 듣기</button></div><div class="actions"><button class="btn secondary" id="prev">◀ 이전</button><button class="btn mint" id="next">다음 ▶</button></div><div class="gridletters">${items.map((a,j)=>`<button class="letter ${j===idx?'selected':''}" data-i="${j}">${a[0]}</button>`).join('')}</div>`;$('play').onclick=()=>say(item,m);$('prev').onclick=()=>learn(m,(idx+items.length-1)%items.length);$('next').onclick=()=>learn(m,(idx+1)%items.length);document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{let j=+b.dataset.i;learn(m,j);say(items[j],m)});}
 function startQuiz(){mode=['c','v','e'][Math.floor(Math.random()*3)];newQuestion()}
-function newQuestion(){let items=sets[mode].items;let answer=Math.floor(Math.random()*items.length),options=[answer];while(options.length<3){let n=Math.floor(Math.random()*items.length);if(!options.includes(n))options.push(n)}options.sort(()=>Math.random()-.5);quiz={answer,items};$('screen').innerHTML=`<h2>🌟 글자 찾기 마법 🌟</h2><div class="panel"><div class="mascot">🐰✨</div><p class="subtitle">소리를 듣고 맞는 글자를 골라줘!</p><button class="btn" id="hear">🔊 문제 듣기</button><div class="choices">${options.map(i=>`<button class="choice" data-choice="${i}">${items[i][0]}</button>`).join('')}</div><p class="status" id="status"></p><button class="btn secondary" id="again">다른 문제 🎲</button></div><div class="actions"><button class="btn mint" id="category">다른 글자 종류 🔄</button></div>`;$('hear').onclick=()=>say(items[answer],mode);$('again').onclick=newQuestion;$('category').onclick=startQuiz;document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{if(+b.dataset.choice===answer){stars++;localStorage.setItem('iseo-stars',stars);refresh();$('status').textContent='✨ 정답! 이서 최고! ⭐';say(items[answer],mode);document.querySelectorAll('[data-choice]').forEach(x=>x.disabled=true)}else{$('status').textContent='🌷 다시 한번 들어볼까?';say(items[answer],mode)}})}
+function newQuestion(){let items=sets[mode].items;let answer=Math.floor(Math.random()*items.length),options=[answer];while(options.length<3){let n=Math.floor(Math.random()*items.length);if(!options.includes(n))options.push(n)}options.sort(()=>Math.random()-.5);quiz={answer,items};$('screen').innerHTML=`<h2>🌟 글자 찾기 마법 🌟</h2><div class="panel"><div class="mascot">🐰✨</div><p class="subtitle">소리를 듣고 맞는 글자를 골라줘!</p><button class="btn" id="hear">🔊 문제 듣기</button><div class="choices">${options.map(i=>`<button class="choice" data-choice="${i}">${items[i][0]}</button>`).join('')}</div><p class="status" id="status"></p><button class="btn secondary" id="again">다른 문제 🎲</button></div><div class="actions"><button class="btn mint" id="category">다른 글자 종류 🔄</button></div>`;$('hear').onclick=()=>say(items[answer],mode);$('again').onclick=newQuestion;$('category').onclick=startQuiz;document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{if(+b.dataset.choice===answer){stars++;localStorage.setItem('iseo-stars',stars);refresh();$('status').textContent='✨ 정답! 이서 최고! ⭐';celebrate();document.querySelectorAll('[data-choice]').forEach(x=>x.disabled=true)}else{$('status').textContent='🌷 다시 한번 들어볼까?';say(items[answer],mode)}})}
 function draw(){let item=sets[mode].items[idx]||consonants[0];$('screen').innerHTML=`<h2>✏️ 손가락 글자 쓰기</h2><div class="panel"><div class="bigletter" id="target">${item[0]}</div><p class="hint">아래에 손가락으로 글자를 그려봐!</p><canvas id="board"></canvas><div class="actions"><button class="btn secondary" id="clear">지우기 🧽</button><button class="btn mint" id="switch">다음 글자 ▶</button></div></div>`;let canvas=$('board'),ctx=canvas.getContext('2d');function resize(){let r=canvas.getBoundingClientRect();canvas.width=r.width*devicePixelRatio;canvas.height=r.height*devicePixelRatio;ctx.scale(devicePixelRatio,devicePixelRatio);ctx.strokeStyle='#ec76ad';ctx.lineWidth=9;ctx.lineCap='round';ctx.lineJoin='round'}resize();let active=false;function point(e){let r=canvas.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}canvas.onpointerdown=e=>{active=true;canvas.setPointerCapture(e.pointerId);let [x,y]=point(e);ctx.beginPath();ctx.moveTo(x,y)};canvas.onpointermove=e=>{if(!active)return;let [x,y]=point(e);ctx.lineTo(x,y);ctx.stroke()};canvas.onpointerup=()=>active=false;$('clear').onclick=resize;$('switch').onclick=()=>{idx=(idx+1)%sets[mode].items.length;draw()}}
 $('home').onclick=home;refresh();home();if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
