@@ -42,7 +42,7 @@ function speak(t,lang='ko'){
     const synth=window.speechSynthesis;
     synth.cancel();
     const u=new SpeechSynthesisUtterance(t);
-    u.lang=lang==='en'?'en-US':'ko-KR';u.rate=.78;u.pitch=1.15;u.volume=1;
+    u.lang=lang==='en'?'en-US':'ko-KR';u.rate=0.9;u.pitch=1.0;u.volume=1;
     const voices=synth.getVoices();
     const matches=voices.filter(v=>v.lang.toLowerCase().startsWith(lang==='en'?'en':'ko'));
     const voice=matches.find(v=>/female|여성|sora|yuna|samantha/i.test(v.name))||matches[0];
