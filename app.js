@@ -50,8 +50,14 @@ function speak(t,lang='ko'){
     synth.speak(u);
   }catch(e){ /* TTS unavailable in this iOS web-app context */ }
 }
-const englishSounds={A:'에이',B:'비',C:'씨',D:'디',E:'이',F:'에프',G:'지',H:'에이치',I:'아이',J:'제이',K:'케이',L:'엘',M:'엠',N:'엔',O:'오우',P:'피',Q:'큐',R:'아르',S:'에스',T:'티',U:'유',V:'브이',W:'더블유',X:'엑스',Y:'와이',Z:'지'};
-function say(item,m=mode){sound(m==='e'?englishSounds[item[0]]:item[1],'ko')}
+const englishSounds={A:'에이',B:'비',C:'씨',D:'디',E:'이',F:'에프',G:'지',H:'에이치',I:'아이',J:'제이',K:'케이',L:'엘',M:'엠',N:'엔',O:'오우',P:'피',Q:'큐',R:'알',S:'에스',T:'티',U:'유',V:'브이',W:'더블유',X:'엑스',Y:'와이',Z:'지'};
+function say(item,m=mode){
+  if(m==='e'){
+    sound(item[0].toLowerCase(),'en');
+  }else{
+    sound(item[1],'ko');
+  }
+}
 // A short, original musical success cue. Runs on a real answer tap.
 function victorySound(){
   try{
