@@ -27,7 +27,6 @@ function chime(){
   } catch(e) { /* no sound device */ }
 }
 function sound(name,lang){
-  chime();
   if(activeAudio){activeAudio.pause();activeAudio=null;}
   // Only try recorded files when explicitly listed here, avoiding nonexistent-file errors.
   const recordings=window.ISEO_RECORDINGS||{};
@@ -51,7 +50,23 @@ function speak(t,lang='ko'){
     synth.speak(u);
   }catch(e){ /* TTS unavailable in this iOS web-app context */ }
 }
-function say(item,m=mode){const label=m==='e'?item[0]:item[1];sound(label,m==='e'?'en':'ko')}
+
+const englishSounds = {
+  A:'에이', B:'비', C:'씨', D:'디', E:'이',
+  F:'에프', G:'지', H:'에이치', I:'아이', J:'제이',
+  K:'케이', L:'엘', M:'엠', N:'엔', O:'오우',
+  P:'피', Q:'큐', R:'아르', S:'에스', T:'티',
+  U:'유', V:'브이', W:'더블유', X:'엑스',
+  Y:'와이', Z:'지'
+};
+
+function say(item, m=mode) {
+  if (m === 'e') {
+    sound(englishSounds[item[0]], 'ko');
+  } else {
+    sound(item[1], 'ko');
+  }
+}
 function home(){quiz=null;$('screen').innerHTML=`<section class="hero"><div class="mascot">🧚🏻‍♀️🐰✨</div><h1>이서의 마법 글자 놀이터</h1><p class="subtitle">요정 친구와 글자 마법을 배워요!</p></section><div class="menu"><button class="tile" data-go="c"><span class="emoji">🌸</span>ㄱ ㄴ ㄷ<br>자음 마법</button><button class="tile" data-go="v"><span class="emoji">🦄</span>ㅏ ㅑ ㅓ<br>모음 마법</button><button class="tile" data-go="e"><span class="emoji">🌈</span>A B C<br>ABC 마법</button><button class="tile" data-go="q"><span class="emoji">⭐</span>글자 찾기<br>별 모으기</button></div><div class="actions"><button class="btn mint" data-go="draw">✏️ 손가락 글자 쓰기</button></div><p class="small">🔊 소리 버튼을 누르면 마법 효과음이 나와요. 글자 읽기는 아이폰 음성 기능에 따라 들리지 않을 수 있어요.</p>`;document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>b.dataset.go==='q'?startQuiz():b.dataset.go==='draw'?draw():learn(b.dataset.go));}
 function learn(m,i=0){mode=m;idx=i;const {title,items}=sets[m],item=items[idx];$('screen').innerHTML=`<h2>✨ ${title} 마법 ✨</h2><div class="panel"><div class="mascot">🧚🏻‍♀️</div><div class="bigletter">${item[0]}</div><div class="word">${m==='e'?item[0]+' · '+item[0].toLowerCase():item[1]}</div><p class="hint">글자를 눌러 소리를 들어보세요!</p><button class="btn" id="play">🔊 소리 듣기</button></div><div class="actions"><button class="btn secondary" id="prev">◀ 이전</button><button class="btn mint" id="next">다음 ▶</button></div><div class="gridletters">${items.map((a,j)=>`<button class="letter ${j===idx?'selected':''}" data-i="${j}">${a[0]}</button>`).join('')}</div>`;$('play').onclick=()=>say(item,m);$('prev').onclick=()=>learn(m,(idx+items.length-1)%items.length);$('next').onclick=()=>learn(m,(idx+1)%items.length);document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{let j=+b.dataset.i;learn(m,j);say(items[j],m)});}
 function startQuiz(){mode=['c','v','e'][Math.floor(Math.random()*3)];newQuestion()}
